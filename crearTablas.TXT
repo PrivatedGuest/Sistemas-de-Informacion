@@ -1,0 +1,90 @@
+-- BORRAMOS LA BD SI EXISTE
+drop database if exists taquilla;
+create database taquilla;
+use taquilla;
+ 
+ 
+-- CREAMOS LAS TABLAS
+ 
+ 
+create table espectaculo(
+id_espectaculo varchar(76)  primary key,
+tipo varchar(20),
+descripcion varchar(200)not null
+);
+ 
+ 
+create table recinto(
+id_recinto varchar(40) primary key,
+tipo varchar(30),
+aforo int
+);
+ 
+ 
+create table espectaculo_participante(
+ id_espectaculo varchar(76) not null,
+ participante varchar(100)not null,
+ primary key(id_espectaculo,participante),
+ foreign key(id_espectaculo) references espectaculo(id_espectaculo)
+);
+ 
+ 
+create table evento(
+id_espectaculo varchar(76) not null,
+id_recinto varchar(40) not null,
+fecha timestamp not null,
+estado varchar(20) not null,
+t1 int,
+t2 int,
+t3 int,
+Entradas_bebe int,
+Entradas_infantil int,
+Entradas_parado int,
+Entradas_adulto int,
+Entradas_jubilado int,
+primary key(id_espectaculo,id_recinto, fecha),
+foreign key(id_espectaculo) references espectaculo(id_espectaculo),
+foreign key(id_recinto) references recinto(id_recinto)
+);
+ 
+ 
+create table cliente(
+DNI varchar(15) primary key,
+nombre varchar(50) not null,
+apellidos varchar(50),
+correo_electronico varchar(50),
+tarjeta_credito varchar(30) not null,
+tipo_usuario varchar(50) not null
+);
+ 
+ 
+create table grada(
+id_espectaculo varchar(76) not null,
+id_recinto varchar(40) not null,
+fecha timestamp not null,
+id_grada int not null,
+N_localidades int,
+Precio_bebe int,
+Precio_infantil int,
+Precio_parado int,
+Precio_adulto int,
+Precio_jubilado int,
+foreign key(id_espectaculo, id_recinto, fecha) references evento(id_espectaculo, id_recinto, fecha),
+primary key(id_espectaculo,id_recinto,fecha,id_grada)
+);
+ 
+ 
+ 
+ 
+create table localidade(
+id_espectaculo varchar(76) not null,
+id_recinto varchar(40) not null,
+id_localidade int not null,
+id_grada int not null,
+fecha timestamp not null,
+estado varchar(30) default 'libre',
+cliente varchar(15),
+fecha_compra timestamp,
+foreign key (id_espectaculo, id_recinto, fecha, id_grada) references grada(id_espectaculo, id_recinto, fecha, id_grada),
+primary key(id_recinto,id_localidade, fecha)
+);

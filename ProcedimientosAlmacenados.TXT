@@ -1,0 +1,226 @@
+﻿use taquilla;
+drop procedure if exists obtener_eventos;
+drop procedure if exists obtener_espectaculos;
+drop procedure if exists obtener_gradas;
+drop procedure if exists pre_reserva;
+drop procedure if exists anulacion;
+drop procedure if exists obtener_localidades;
+drop procedure if exists crear_gradas;
+drop procedure if exists obtener_participantes;
+drop procedure if exists crear_evento;
+
+
+delimiter //
+
+
+create procedure obtener_espectaculos(IN tipo varchar(20),IN participante varchar(100), IN espectaculo varchar(76))
+BEGIN
+select espectaculo.id_espectaculo,espectaculo.tipo,espectaculo.descripcion,espectaculo_participante.participante
+from espectaculo, espectaculo_participante
+where espectaculo_participante.participante like participante
+and espectaculo.id_espectaculo=espectaculo_participante.id_espectaculo
+and espectaculo.tipo like tipo
+and espectaculo.id_espectaculo like espectaculo;
+END//
+
+
+create procedure obtener_eventos(IN id_espectaculo varchar(76),IN id_recinto varchar(40),IN fecha varchar(20),IN estado varchar(20), IN precio_tipo varchar(3) , IN entrada_tipo varchar(3), IN tipo varchar(50))
+BEGIN
+declare variable varchar(50);
+if( strcmp(tipo,'%') = 0) then
+set variable='asdf';
+else set variable=tipo;
+end if;
+select *
+from evento,grada
+where evento.id_espectaculo like id_espectaculo
+and evento.id_recinto like id_recinto
+and evento.fecha like fecha
+and evento.id_espectaculo = grada.id_espectaculo
+and evento.id_recinto = grada.id_recinto
+and evento.fecha = grada.fecha
+and evento.estado like estado
+and case variable
+when 'bebe' then evento.entradas_bebe > cast(entrada_tipo as signed) and grada.precio_bebe < cast(precio_tipo as signed)
+when 'adulto' then evento.entradas_adulto > cast(entrada_tipo as signed)  and grada.precio_adulto < cast(precio_tipo as signed)
+when 'parado' then evento.entradas_parado > cast(entrada_tipo as signed) and grada.precio_parado < cast(precio_tipo as signed)
+when 'jubilado' then evento.entradas_jubilado > cast(entrada_tipo as signed) and grada.precio_jubilado < cast(precio_tipo as signed)
+when 'infantil' then evento.entradas_infantil > cast(entrada_tipo as signed) and grada.precio_infantil < cast(precio_tipo as signed)
+when 'asdf' then evento.id_espectaculo like id_espectaculo
+end
+group by evento.id_recinto and evento.id_espectaculo and evento.fecha;
+END //
+
+
+create procedure obtener_gradas(IN id_espectaculo varchar(76),IN id_recinto varchar(40),IN fecha varchar(20),IN precio_tipo varchar(3), IN tipo varchar(50))
+BEGIN
+declare variable varchar(50);
+if( strcmp(tipo,'%') = 0) then
+set variable='asdf';
+else set variable=tipo;
+end if;
+select grada.id_espectaculo,grada.precio_parado,grada.id_recinto,grada.fecha,grada.id_grada,grada.N_localidades,grada.Precio_bebe,grada.precio_infantil,grada.precio_adulto,grada.precio_jubilado
+from grada
+where grada.id_espectaculo like id_espectaculo
+and grada.id_recinto like id_recinto
+and grada.fecha like fecha
+and case variable
+when 'bebe' then grada.precio_bebe like precio_tipo
+when 'adulto' then  grada.precio_adulto like precio_tipo
+when 'parado' then  grada.precio_parado like precio_tipo
+when 'jubilado' then  grada.precio_jubilado like precio_tipo
+when 'infantil' then  grada.precio_infantil like precio_tipo
+when 'asdf' then grada.id_espectaculo like id_espectaculo
+end ;
+END //
+
+
+create procedure obtener_participantes(IN espectaculo varchar(76),IN id_recinto varchar(40))
+BEGIN
+SELECT espectaculo_participante.participante,espectaculo_participante.id_espectaculo,evento.fecha,recinto.id_recinto,recinto.tipo
+from espectaculo_participante
+inner join espectaculo
+on  espectaculo_participante.id_espectaculo = espectaculo.id_espectaculo
+inner join evento
+on    espectaculo_participante.id_espectaculo = evento.id_espectaculo
+inner join recinto
+on  recinto.id_recinto = evento. id_recinto
+where espectaculo_participante.id_espectaculo like espectaculo
+and evento.id_recinto like id_recinto;
+END //
+
+
+create procedure obtener_localidades(IN id_espectaculo varchar(76), IN id_recinto varchar(40), IN fecha varchar(20),IN estado varchar(10),IN precio_tipo varchar(10),IN tipo varchar(10))
+BEGIN
+declare variable varchar(50);
+if( strcmp(tipo,'%') = 0) then
+set variable='asdf';
+else set variable=tipo;
+end if;
+select localidade.id_localidade, localidade.id_grada, localidade.estado, grada.N_localidades,grada.id_recinto,
+grada.Precio_bebe, grada.Precio_adulto, grada.Precio_infantil, grada.Precio_jubilado, grada.Precio_parado from localidade
+inner join grada
+on grada.id_espectaculo=localidade.id_espectaculo
+and grada.id_recinto = localidade.id_recinto
+and grada.fecha = localidade.fecha
+and grada.id_grada = localidade.id_grada
+where grada.id_espectaculo like id_espectaculo
+and grada.id_recinto like id_recinto
+and grada.fecha like fecha
+and localidade.estado like estado
+and case variable
+when 'bebe' then grada.precio_bebe < cast(precio_tipo as signed)
+when 'adulto' then  grada.precio_adulto < cast(precio_tipo as signed)
+when 'parado' then  grada.precio_parado < cast(precio_tipo as signed)
+when 'jubilado' then  grada.precio_jubilado < cast(precio_tipo as signed)
+when 'infantil' then  grada.precio_infantil < cast(precio_tipo as signed)
+when 'asdf' then grada.id_espectaculo = localidade.id_espectaculo
+end ;
+END //
+
+
+create procedure crear_gradas(IN espectaculo varchar(76), IN recinto varchar(40), IN fecha TIMESTAMP, IN grada int, IN N_local int, IN Prec_bebe int, IN Prec_infantil int, IN Prec_parado int, IN Prec_adulto int, IN Prec_jubilado int, IN local_init int, IN local_fin int)
+BEGIN
+insert into grada(id_espectaculo, id_recinto, fecha, id_grada, N_localidades, Precio_bebe, Precio_infantil, Precio_parado, Precio_adulto, Precio_jubilado) values
+(espectaculo, recinto, fecha, grada, N_local, Prec_bebe, Prec_infantil, Prec_parado, Prec_adulto, Prec_jubilado);
+WHILE(local_init <= local_fin) DO
+insert into localidade(id_espectaculo,id_recinto,id_localidade,id_grada,fecha,estado,cliente,fecha_compra) values
+(espectaculo,recinto,local_init,grada,fecha,'libre',null,null);
+SET local_init = local_init + 1;
+END WHILE;
+END //
+
+
+create procedure pre_reserva(IN id_espectaculo varchar(76),IN id_recinto varchar(40),IN fecha TIMESTAMP,IN id_grada int, IN id_localidade int, IN DNI varchar(15),IN estado varchar(30))
+BEGIN
+declare plazo int;
+declare tiempo_restante int;
+declare estado_localidade varchar(30);
+declare localidades_cliente int;
+declare max_localidades int;
+select t2 into plazo from evento where evento.id_espectaculo=id_espectaculo and evento.id_recinto =id_recinto and evento.fecha=fecha;
+set tiempo_restante = TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP(),fecha);
+if(plazo>tiempo_restante) then
+if(tiempo_restante < 0) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O evento xa está inciado, non pode reservar';
+else
+if(STRCMP(estado,'pre-reservado') != 0) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Xa non pode realizar pre-reservas';
+end if;
+end if;
+end if;
+select localidade.estado into estado_localidade from localidade
+where localidade.id_espectaculo=id_espectaculo
+and localidade.id_recinto= id_recinto
+and localidade.fecha=fecha
+and localidade.id_grada=id_grada
+and localidade.id_localidade=id_localidade;
+select count(*) into localidades_cliente from localidade
+where localidade.id_espectaculo=id_espectaculo
+and localidade.id_recinto= id_recinto
+and localidade.fecha=fecha
+and localidade.id_grada=id_grada
+and localidade.cliente=DNI;
+select grada.N_localidades into max_localidades from grada
+where grada.id_espectaculo=id_espectaculo
+and grada.id_recinto= id_recinto
+and grada.fecha=fecha
+and grada.id_grada=id_grada;
+if(STRCMP(estado_localidade, 'libre')) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A localidade non está libre';
+end if;
+if(localidades_cliente = max_localidades) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non pode reservar máis localidades para esta grada';
+end if;
+delete from localidade
+where localidade.id_espectaculo=id_espectaculo
+and localidade.id_recinto= id_recinto
+and localidade.fecha=fecha
+and localidade.id_grada=id_grada
+and localidade.id_localidade=id_localidade;
+insert into localidade values
+(id_espectaculo, id_recinto, id_localidade, id_grada, fecha, estado, DNI, NOW());
+select 'Operacion realizada';
+END//
+
+
+create procedure anulacion(IN id_espectaculo varchar(76),IN id_recinto varchar(40),IN fecha TIMESTAMP,IN id_grada int, IN id_localidade int)
+BEGIN
+declare penalizar int;
+declare tiempo_restante int;
+declare estado_localidade varchar(30);
+select evento.t3 into penalizar from evento where evento.id_espectaculo=id_espectaculo and evento.id_recinto=id_recinto and evento.fecha=fecha;
+set tiempo_restante = TIMESTAMPDIFF(MINUTE, NOW(), fecha);
+select estado into estado_localidade from localidade where localidade.id_espectaculo=id_espectaculo
+and localidade.id_recinto= id_recinto
+and localidade.fecha=fecha
+and localidade.id_grada=id_grada
+and localidade.id_localidade=id_localidade;
+if(STRCMP(estado_localidade, 'reservado')) then
+if(STRCMP(estado_localidade, 'pre-reservado')) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A localidade non está reservada ou pre-reservada';
+end if;
+end if;
+if(tiempo_restante < 0) then
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O evento xa está inciado, non pode anular';
+end if;
+delete from localidade where localidade.id_espectaculo=id_espectaculo
+and localidade.id_recinto= id_recinto
+and localidade.fecha=fecha
+and localidade.id_grada=id_grada
+and localidade.id_localidade=id_localidade;
+insert into localidade values
+(id_espectaculo, id_recinto, id_localidade, id_grada, fecha, 'libre', null, NOW());
+if(tiempo_restante < penalizar) then
+select 'Anulado con penalizacion';
+else
+select 'Anulado correctamente';
+end if;
+END//
+
+
+create procedure crear_evento(IN id_espectaculo varchar(50),IN id_recinto varchar(40),IN fecha Date,IN t1 int, IN t2 int, IN t3 int,in ent_bebe int, IN ent_infantil int, IN ent_adulto int, IN ent_parado int,IN ent_jubilado int)
+BEGIN
+insert into evento values(id_espectaculo,id_recinto,fecha,’abierto’,t1,t2,t3,ent_bebe,ent_infantil,ent_adulto,ent_parado,ent_jubilado);
+END//
+delimiter ;

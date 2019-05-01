@@ -1,0 +1,108 @@
+use taquilla;
+drop trigger if exists trigger_estado_evento;
+drop event if exists evento_t1;
+drop event if exists evento_estado_evento;
+drop trigger if exists tipo_cliente_correcto;
+drop trigger if exists localidad_aforo;
+drop trigger if exists localidade_estado_correcto;
+
+delimiter //
+
+create trigger tipo_cliente_correcto before insert on cliente
+for each row
+begin
+if not (new.tipo_usuario='adulto' or new.tipo_usuario='bebe' or new.tipo_usuario='jubilado' or new.tipo_usuario='parado' or new.tipo_usuario='infantil' or new.tipo_usuario='administrador') then
+set new.DNI=null;
+end if;
+end//
+
+delimiter ;
+delimiter //
+
+create trigger localidade_estado_correcto before insert on localidade
+for each row
+begin
+if not(new.estado='pre-reservado' or new.estado='reservado' or new.estado='deteriorado' or new.estado='libre') then
+set new.id_localidade=null;
+end if;
+end//
+
+
+create trigger localidad_aforo before insert on localidade
+for each row
+begin
+declare aforo int;
+select recinto.aforo into aforo from recinto where id_recinto=new.id_recinto;
+if(new.id_localidade > aforo) then set new.id_localidade=null;
+end if ;
+end //
+
+
+
+create trigger trigger_estado_evento after update on localidade
+for each row
+begin
+if not exists (select * from localidade where id_espectaculo=new.id_espectaculo and id_recinto=new.id_recinto and fecha=new.fecha and id_grada = new.id_grada and estado='libre') then
+update evento set estado='cerrado' where id_espectaculo=new.id_espectaculo and id_recinto=new.id_recinto and fecha=new.fecha;
+else update evento set estado='aberto' where id_espectaculo=new.id_espectaculo and id_recinto=new.id_recinto and fecha=new.fecha;
+end if;
+end//
+
+create event evento_t1
+on schedule at current_timestamp() + interval 1 minute
+do
+begin
+declare id_espectaculo varchar(76);
+declare id_recinto varchar(40);
+declare fecha date;
+declare fecha_compra timestamp;
+declare id_localidad int;
+declare id_grada int;
+declare tiempo_pre_reservado int;
+DECLARE done INT DEFAULT FALSE;
+DECLARE t1 INT;
+DECLARE cur1 CURSOR FOR SELECT id_espectaculo, id_recinto, id_grada, fecha, fecha_compra, id_localidad FROM localidade where estado='pre-reservado';
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+OPEN cur1;
+  read_loop: LOOP
+   FETCH cur1 INTO id_espectaculo, id_recinto, id_grada, fecha, fecha_compra, id_localidad;
+   select t1 into t1 from evento where id_espectaculo=id_espectaculo and id_recinto=id_recinto and fecha=fecha;
+   IF done THEN
+     LEAVE read_loop;
+   END IF;
+   set tiempo_pre_reservado = current_timestamp() - fecha_compra;
+   if(t1< tiempo_pre_reservado) then
+   update localidade set fecha_compra=null , cliente=null, estado='libre' where id_espectaculo=id_espectaculo and id_recinto=id_recinto and id_grada=id_grada and fecha=fecha and id_localidad=id_localidad;
+   END IF;
+ END LOOP;
+ CLOSE cur1;
+end//
+
+
+
+create event evento_estado_evento
+on schedule at current_timestamp() + interval 1 minute
+do
+begin
+declare id_espectaculo varchar(76);
+declare id_recinto int;
+declare fecha date;
+DECLARE done INT DEFAULT FALSE;
+DECLARE cur1 CURSOR FOR SELECT id_espectaculo, id_recinto, fecha FROM evento;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+OPEN cur1;
+read_loop: LOOP
+FETCH cur1 INTO id_espectaculo, id_recinto, fecha;
+
+IF done THEN
+     LEAVE read_loop;
+   END IF;
+   if(fecha< current_timestamp()) then update evento set estado='cerrado' where id_espectaculo=id_espectaculo and id_recinto=id_recinto and fecha=fecha;
+   end if;
+   if(TIMESTAMPDIFF(HOUR, fecha, current_timestamp()) > 24) then update evento set estado='finalizado' where id_espectaculo=id_espectaculo and id_recinto=id_recinto and fecha=fecha;
+   end if;
+END LOOP;
+   close cur1;
+end//
+
+delimiter ;

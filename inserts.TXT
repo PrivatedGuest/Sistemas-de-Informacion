@@ -1,0 +1,65 @@
+﻿-- AQUI SE INSERTARAN TODOS LOS DATOS EN LA BD
+
+
+insert into espectaculo values('El_rey_leon','teatro','Muy triste');
+insert into espectaculo values('Grease','teatro','Casi negro');
+insert into espectaculo values('La_casa_de_Bernarda_Alba','teatro','Presionada pola familia e o que pasa despois sorprenderate');
+insert into espectaculo values('Avengers','Cine','Dos vengadores pelean por un churro con musica de linkin park de fondo HD 60fps');
+insert into espectaculo values('El_ilusionista','Cine','Un señor moi rencoroso engana a todo o mundo');
+insert into espectaculo values('Del_sol','Circo','Espectáculo inimaxinable');
+insert into espectaculo values('Malu','Concierto','Un gran concierto hecho para llegar a los ciudadanos');
+insert into espectaculo values('Beret','Concierto','Estrena su nueva gira por España');
+
+
+insert into recinto values('Camp_Bernabeu','Pabellon',10);
+insert into recinto values('Vistalegre','Pabellon',8);
+insert into recinto values('Escolas_Deportivas','Pabellon',6);
+insert into recinto values('Wanda_Metropolitano','Campo_Futbol',20);
+insert into recinto values('Cosmo_Rural','Campo_Futbol',24);
+insert into recinto values('Teatro_Gran_Via','Teatro',15);
+insert into recinto values('Madrid_City','Teatro',13);
+insert into recinto values('Cines_Plaza_Eliptica','Cine',8);
+insert into recinto values('GranPeli','Cine',7);
+
+insert into evento(id_espectaculo,id_recinto,fecha,estado,t1,t2,t3,
+    Entradas_bebe,Entradas_adulto,Entradas_parado,Entradas_infantil, Entradas_jubilado) values
+
+    ('El_rey_leon','Vistalegre',TIMESTAMP '2019-06-17 15:00:00','abierto',30,20,10,-1,-1,4,4,-1),
+    ('Beret','Camp_Bernabeu',TIMESTAMP '2019-07-25 17:00:00','abierto',30,20,10,-1,-1,5,5,-1);
+
+insert into grada(id_espectaculo,id_recinto,fecha,id_grada,N_localidades,
+    Precio_bebe,Precio_adulto,Precio_parado,Precio_infantil,Precio_jubilado) values
+
+    ('El_rey_leon','Vistalegre',TIMESTAMP '2019-06-17 15:00:00',1,2,1,3,2,2,2),
+    ('El_rey_leon','Vistalegre',TIMESTAMP '2019-06-17 15:00:00',2,2,2,4,3,3,2);
+
+insert into localidade(id_espectaculo,id_recinto,id_localidade,id_grada,fecha,estado,cliente,fecha_compra) values
+        ('El_rey_leon','Vistalegre',1,1,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',2,1,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',3,1,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',4,1,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',5,2,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',6,2,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',7,2,TIMESTAMP '2019-06-17 15:00:00','libre',null,null),
+        ('El_rey_leon','Vistalegre',8,2,TIMESTAMP '2019-06-17 15:00:00','libre',null,null);
+
+insert into cliente values('99166692H','Amancio','Silla','Amancio@silla.sit','1928562871267182','Bebe');
+insert into cliente values('41319498T','Jesus','Mesa','Jesus@itodemi.vida','192782648267182','Jubilado');
+insert into cliente values('60374527G','Jose','Juan','Jj@asd.com','192856391754850','Adulto');
+insert into cliente values('13239949G','Pedro','Ponte','PedroPablo@joke.jaja','6583756229861523','Parado');
+insert into cliente values('74169007R','Dani','Martin','nighqueen@rtve.es','6572845215117582','infantil');
+insert into cliente values('12345678H','Adrian','Deiki','daria@spam.true','3759728591759173','Administrador');
+
+insert into espectaculo_participante(id_espectaculo,participante) values
+ ('Beret','Morat'),
+ ('Malu', 'Malu'),
+ ('Beret','Beret'),
+ ('Malu','Lady Gaga'),
+ ('Beret','Beyonce'),
+ ('Malu','Shakira'),
+ ('El_rey_leon','Simba'),
+ ('Avengers','T-rex'),
+ ('Grease','Azul'),
+ ('El_ilusionista','Piedrahita'),
+ ('La_casa_de_Bernarda_Alba','Alba'),
+ ('Del_sol','Mono aleatorio');
